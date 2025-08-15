@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metatronium Engineering Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a3e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(26, 26, 62, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0, 150, 255, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .input-group:hover {
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00d4ff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .reset-button {
+            background: linear-gradient(135deg, #ff0066 0%, #cc0052 100%);
+            flex: 0.3;
+        }
+        
+        .output-section {
+            margin-top: 30px;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .output-header {
+            color: #00ff96;
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 255, 150, 0.3);
+        }
+        
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .output-card {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 150, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .output-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 255, 150, 0.2);
+        }
+        
+        .output-label {
+            color: #00ff96;
+            font-size: 12px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .output-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .output-unit {
+            font-size: 14px;
+            color: #888;
+            margin-left: 5px;
+        }
+        
+        .critical-output {
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.1), rgba(0, 212, 255, 0.1));
+            border-color: #00ff96;
+            border-width: 2px;
+        }
+        
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #aaa;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⬡ METATRONIUM CALCULATOR ⬡</h1>
+        <p class="subtitle">7-Plane Tetrahedral-Reinforced Lattice Structure Analysis</p>
+        
+        <div class="info-box">
+            <h3>📐 Quick Guide</h3>
+            <p>Enter your parameters below to calculate the engineering properties of your Metatronium structure. All calculations are based on the 7-plane configuration with tetrahedral gussets.</p>
+        </div>
+        
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="material">🔧 Material Type</label>
+                <select id="material">
+                    <option value="aluminum">Aluminum 6061-T6</option>
+                    <option value="steel">Steel AISI 304</option>
+                    <option value="titanium">Titanium Ti-6Al-4V</option>
+                    <option value="carbon">Carbon Fiber Composite</option>
+                    <option value="polymer">PEEK Polymer</option>
+                    <option value="custom">Custom Material</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="thickness">📏 Stock Material Thickness (mm)</label>
+                <input type="number" id="thickness" value="0.5" step="0.01" min="0.01">
+            </div>
+            
+            <div class="input-group">
+                <label for="nodeSize">⬢ Unit Cell Dimension (mm)</label>
+                <input type="number" id="nodeSize" value="100" step="1" min="1">
+            </div>
+            
+            <div class="input-group">
+                <label for="width">↔️ Structure Width (mm)</label>
+                <input type="number" id="width" value="1000" step="1" min="1">
+            </div>
+            
+            <div class="input-group">
+                <label for="length">↕️ Structure Length (mm)</label>
+                <input type="number" id="length" value="1000" step="1" min="1">
+            </div>
+            
+            <div class="input-group">
+                <label for="height">📐 Structure Height (mm)</label>
+                <input type="number" id="height" value="200" step="1" min="1">
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button onclick="calculate()">⚡ CALCULATE PROPERTIES</button>
+            <button class="reset-button" onclick="resetForm()">↺ RESET</button>
+        </div>
+        
+        <div class="output-section" id="outputSection">
+            <h2 class="output-header">📊 CALCULATED PROPERTIES</h2>
+            
+            <div class="output-grid">
+                <div class="output-card critical-output">
+                    <div class="output-label">🎯 Total Surface Area Required</div>
+                    <div class="output-value" id="surfaceArea">-</div>
+                </div>
+                
+                <div class="output-card critical-output">
+                    <div class="output-label">⚖️ Structure Weight</div>
+                    <div class="output-value" id="weight">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">📊 Relative Density</div>
+                    <div class="output-value" id="relativeDensity">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">💪 Effective Modulus</div>
+                    <div class="output-value" id="effectiveModulus">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">🔨 Compressive Strength</div>
+                    <div class="output-value" id="compressiveStrength">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">⚡ Shear Modulus</div>
+                    <div class="output-value" id="shearModulus">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">🏗️ Buckling Load</div>
+                    <div class="output-value" id="bucklingLoad">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">⬢ Unit Cells (Total)</div>
+                    <div class="output-value" id="unitCells">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">🕳️ Porosity</div>
+                    <div class="output-value" id="porosity">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">📈 Specific Stiffness</div>
+                    <div class="output-value" id="specificStiffness">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">🌡️ Thermal Conductivity</div>
+                    <div class="output-value" id="thermalConductivity">-</div>
+                </div>
+                
+                <div class="output-card">
+                    <div class="output-label">💰 Cost Estimate</div>
+                    <div class="output-value" id="costEstimate">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const materials = {
+            aluminum: {
+                density: 2700, // kg/m³
+                modulus: 69, // GPa
+                strength: 310, // MPa
+                shear: 26, // GPa
+                thermal: 167, // W/mK
+                cost: 3 // $/kg
+            },
+            steel: {
+                density: 7900,
+                modulus: 193,
+                strength: 520,
+                shear: 77,
+                thermal: 16,
+                cost: 1.5
+            },
+            titanium: {
+                density: 4430,
+                modulus: 114,
+                strength: 950,
+                shear: 44,
+                thermal: 7,
+                cost: 35
+            },
+            carbon: {
+                density: 1600,
+                modulus: 150,
+                strength: 600,
+                shear: 5,
+                thermal: 5,
+                cost: 50
+            },
+            polymer: {
+                density: 1320,
+                modulus: 3.5,
+                strength: 100,
+                shear: 1.3,
+                thermal: 0.25,
+                cost: 100
+            },
+            custom: {
+                density: 2700,
+                modulus: 70,
+                strength: 300,
+                shear: 26,
+                thermal: 100,
+                cost: 10
+            }
+        };
+        
+        function calculate() {
+            // Get input values
+            const materialType = document.getElementById('material').value;
+            const thickness = parseFloat(document.getElementById('thickness').value);
+            const nodeSize = parseFloat(document.getElementById('nodeSize').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const length = parseFloat(document.getElementById('length').value);
+            const height = parseFloat(document.getElementById('height').value);
+            
+            // Validation
+            if (isNaN(thickness) || isNaN(nodeSize) || isNaN(width) || isNaN(length) || isNaN(height)) {
+                alert('Please enter valid numbers for all fields');
+                return;
+            }
+            
+            // Get material properties
+            const mat = materials[materialType];
+            
+            // Calculate unit cells
+            const cellsX = Math.floor(width / nodeSize);
+            const cellsY = Math.floor(length / nodeSize);
+            const cellsZ = Math.floor(height / nodeSize);
+            const totalCells = cellsX * cellsY * cellsZ;
+            
+            // Calculate relative density (7 planes per unit cell)
+            const relativeDensity = 7 * (thickness / nodeSize) * 1.15; // 1.15 factor for overlaps
+            
+            // Calculate surface area per unit cell
+            const diagonalLength = nodeSize * Math.sqrt(2);
+            const surfacePerCell = (
+                3 * nodeSize * nodeSize + // 3 orthogonal planes
+                4 * 0.5 * diagonalLength * diagonalLength // 4 tetrahedral planes
+            ) * (thickness / nodeSize);
+            
+            // Total surface area (in m²)
+            const totalSurfaceArea = (surfacePerCell * totalCells) / 1000000;
+            
+            // Calculate weight
+            const structureVolume = (width * length * height) / 1e9; // m³
+            const effectiveVolume = structureVolume * relativeDensity;
+            const weight = effectiveVolume * mat.density;
+            
+            // Calculate effective properties
+            const effectiveModulus = mat.modulus * relativeDensity * 0.58; // GPa
+            const effectiveShear = mat.shear * relativeDensity * 0.77; // GPa
+            const effectiveStrength = mat.strength * Math.pow(relativeDensity, 1.5); // MPa
+            
+            // Calculate buckling load (simplified)
+            const bucklingLoad = (Math.PI * Math.PI * effectiveModulus * 1e9 * 
+                                 (thickness/1000) * (width/1000) * Math.pow(thickness/1000, 2)) / 
+                                (12 * Math.pow(height/1000, 2)) / 1000; // kN
+            
+            // Porosity
+            const porosity = (1 - relativeDensity) * 100;
+            
+            // Specific stiffness
+            const specificStiffness = (effectiveModulus * 1e9) / (mat.density * relativeDensity);
+            
+            // Effective thermal conductivity
+            const effectiveThermal = mat.thermal * relativeDensity;
+            
+            // Cost estimate
+            const materialCost = weight * mat.cost;
+            
+            // Update display with animation
+            document.getElementById('outputSection').style.display = 'block';
+            
+            // Animate values
+            animateValue('surfaceArea', 0, totalSurfaceArea, 1000, 'm²', 2);
+            animateValue('weight', 0, weight, 1000, 'kg', 2);
+            animateValue('relativeDensity', 0, relativeDensity * 100, 1000, '%', 2);
+            animateValue('effectiveModulus', 0, effectiveModulus, 1000, 'GPa', 2);
+            animateValue('compressiveStrength', 0, effectiveStrength, 1000, 'MPa', 1);
+            animateValue('shearModulus', 0, effectiveShear, 1000, 'GPa', 2);
+            animateValue('bucklingLoad', 0, bucklingLoad, 1000, 'kN', 1);
+            animateValue('unitCells', 0, totalCells, 1000, 'cells', 0);
+            animateValue('porosity', 0, porosity, 1000, '%', 1);
+            animateValue('specificStiffness', 0, specificStiffness/1e6, 1000, 'MNm/kg', 2);
+            animateValue('thermalConductivity', 0, effectiveThermal, 1000, 'W/mK', 2);
+            animateValue('costEstimate', 0, materialCost, 1000, 'USD', 2, '$');
+        }
+        
+        function animateValue(id, start, end, duration, unit, decimals, prefix = '') {
+            const element = document.getElementById(id);
+            const range = end - start;
+            const increment = range / (duration / 10);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                
+                let displayValue;
+                if (decimals === 0) {
+                    displayValue = Math.floor(current).toLocaleString();
+                } else {
+                    displayValue = current.toFixed(decimals);
+                }
+                
+                element.innerHTML = prefix + displayValue + '<span class="output-unit">' + unit + '</span>';
+            }, 10);
+        }
+        
+        function resetForm() {
+            document.getElementById('material').value = 'aluminum';
+            document.getElementById('thickness').value = '0.5';
+            document.getElementById('nodeSize').value = '100';
+            document.getElementById('width').value = '1000';
+            document.getElementById('length').value = '1000';
+            document.getElementById('height').value = '200';
+            document.getElementById('outputSection').style.display = 'none';
+        }
+        
+        // Add keyboard support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>

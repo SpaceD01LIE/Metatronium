@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metatronium Advanced Engineering Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a3e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(26, 26, 62, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0, 150, 255, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        /* Full-width visualization at top */
+        .visualization-container {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #151528 100%);
+        }
+        
+        .visualization-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .viz-title {
+            color: #00d4ff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .dimension-display {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            font-size: 14px;
+            color: #00ff96;
+        }
+        
+        .stress-legend {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 11px;
+            z-index: 10;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 8px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-button {
+            padding: 8px 15px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 5px;
+            color: #00d4ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .control-button:hover {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            transform: translateY(-1px);
+        }
+        
+        .control-button.active {
+            background: rgba(0, 212, 255, 0.4);
+            border-color: #00ff96;
+            color: #00ff96;
+        }
+        
+        /* Input and output sections side by side */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .input-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .section-title {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '⬡';
+            color: #00ff96;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        
+        .input-group.full-width {
+            grid-column: span 2;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00d4ff;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .input-with-unit {
+            display: flex;
+            gap: 5px;
+        }
+        
+        input, select {
+            flex: 1;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        .unit-selector {
+            width: 65px;
+            flex: none;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        button.calculate-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button.calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .output-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 150, 0.3);
+        }
+        
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .output-card {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 150, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .output-card:hover {
+            transform: translateY(-1px);
+            border-color: rgba(0, 255, 150, 0.5);
+            box-shadow: 0 2px 10px rgba(0, 255, 150, 0.2);
+        }
+        
+        .output-label {
+            color: #00ff96;
+            font-size: 11px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+        
+        .output-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .output-unit {
+            font-size: 11px;
+            color: #888;
+            margin-left: 5px;
+        }
+        
+        .critical-output {
+            background: linear-gradient(135deg, rgba(0, 255, 150, 0.1), rgba(0, 212, 255, 0.1));
+            border-color: #00ff96;
+        }
+        
+        .stress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+        }
+        
+        .stress-bar {
+            flex: 1;
+            height: 20px;
+            background: linear-gradient(90deg, 
+                #00ff00 0%, 
+                #90ff00 25%, 
+                #ffff00 50%, 
+                #ff9000 75%, 
+                #ff0000 100%);
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .stress-marker {
+            position: absolute;
+            top: -5px;
+            width: 4px;
+            height: 30px;
+            background: #ffffff;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            transition: left 0.5s ease;
+        }
+        
+        .scale-info {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            font-size: 11px;
+            color: #00d4ff;
+        }
+        
+        .view-controls {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 5px;
+            border-radius: 6px;
+        }
+        
+        .view-btn {
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 4px;
+            color: #00d4ff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .view-btn:hover {
+            background: rgba(0, 212, 255, 0.4);
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            #canvas-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⬡ METATRONIUM ADVANCED STRUCTURAL CALCULATOR ⬡</h1>
+        
+        <!-- Full-width visualization -->
+        <div class="visualization-container">
+            <div class="visualization-header">
+                <div class="viz-title">3D STRUCTURAL ANALYSIS</div>
+                <div class="dimension-display" id="dimensionDisplay">
+                    Dimensions: - × - × -
+                </div>
+            </div>
+            
+            <div id="canvas-container">
+                <div class="stress-legend">
+                    <div style="margin-bottom: 8px; font-weight: bold; color: #00d4ff;">Stress Distribution</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00ff00;"></div>
+                        <span>Stable (0-20%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #90ff00;"></div>
+                        <span>Low (20-40%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffff00;"></div>
+                        <span>Moderate (40-60%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff9000;"></div>
+                        <span>High (60-80%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff0000;"></div>
+                        <span>Critical (>80%)</span>
+                    </div>
+                </div>
+                
+                <div class="scale-info" id="scaleInfo">
+                    Scale: 1:1
+                </div>
+                
+                <div class="view-controls">
+                    <div class="view-btn" onclick="setView('iso')" title="Isometric">◆</div>
+                    <div class="view-btn" onclick="setView('top')" title="Top">↓</div>
+                    <div class="view-btn" onclick="setView('front')" title="Front">◫</div>
+                    <div class="view-btn" onclick="setView('side')" title="Side">◧</div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <button class="control-button" id="rotateBtn" onclick="rotateModel()">↻ Auto Rotate</button>
+                <button class="control-button" onclick="resetView()">⟲ Reset View</button>
+                <button class="control-button" id="wireframeBtn" onclick="toggleWireframe()">▦ Wireframe</button>
+                <button class="control-button" onclick="toggleLattice()">◇ Show Lattice</button>
+                <button class="control-button" onclick="exportData()">📊 Export Data</button>
+                <button class="control-button" onclick="captureImage()">📷 Capture</button>
+            </div>
+        </div>
+        
+        <!-- Input and Output sections -->
+        <div class="main-content">
+            <div class="input-section">
+                <div class="section-title">INPUT PARAMETERS</div>
+                
+                <div class="input-grid">
+                    <div class="input-group full-width">
+                        <label for="material">Material Type</label>
+                        <select id="material">
+                            <option value="aluminum">Aluminum 6061-T6</option>
+                            <option value="steel">Steel AISI 304</option>
+                            <option value="titanium">Titanium Ti-6Al-4V</option>
+                            <option value="carbon">Carbon Fiber Composite</option>
+                            <option value="polymer">PEEK Polymer</option>
+                            <option value="custom">Custom Material</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="thickness">Material Thickness</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="thickness" value="0.5" step="0.01" min="0.01">
+                            <select class="unit-selector" id="thicknessUnit">
+                                <option value="mm">mm</option>
+                                <option value="cm">cm</option>
+                                <option value="m">m</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="nodeSize">Unit Cell Dimension</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="nodeSize" value="10" step="0.1" min="0.1">
+                            <select class="unit-selector" id="nodeSizeUnit">
+                                <option value="mm">mm</option>
+                                <option value="cm" selected>cm</option>
+                                <option value="m">m</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="width">Structure Width (X)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="width" value="6" step="0.1" min="0.1">
+                            <select class="unit-selector" id="widthUnit">
+                                <option value="cm">cm</option>
+                                <option value="m" selected>m</option>
+                                <option value="km">km</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="height">Structure Height (Y)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="height" value="3" step="0.1" min="0.1">
+                            <select class="unit-selector" id="heightUnit">
+                                <option value="cm">cm</option>
+                                <option value="m" selected>m</option>
+                                <option value="km">km</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="length">Structure Length (Z)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="length" value="200" step="0.1" min="0.1">
+                            <select class="unit-selector" id="lengthUnit">
+                                <option value="cm">cm</option>
+                                <option value="m" selected>m</option>
+                                <option value="km">km</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="loadType">Load Type</label>
+                        <select id="loadType">
+                            <option value="compression">Compression</option>
+                            <option value="tension">Tension</option>
+                            <option value="bending">Bending</option>
+                            <option value="shear">Shear</option>
+                            <option value="torsion">Torsion</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculate()">⚡ CALCULATE & VISUALIZE</button>
+                
+                <div class="stress-indicator">
+                    <span style="font-size: 12px; width: 80px;">STRESS:</span>
+                    <div class="stress-bar">
+                        <div class="stress-marker" id="stressMarker" style="left: 20%"></div>
+                    </div>
+                    <span style="font-size: 12px; width: 50px; text-align: right;" id="stressPercent">20%</span>
+                </div>
+            </div>
+            
+            <div class="output-section">
+                <div class="section-title">CALCULATED PROPERTIES</div>
+                
+                <div class="output-grid">
+                    <div class="output-card critical-output">
+                        <div class="output-label">SURFACE AREA REQUIRED</div>
+                        <div class="output-value" id="surfaceArea">-</div>
+                    </div>
+                    
+                    <div class="output-card critical-output">
+                        <div class="output-label">STRUCTURE WEIGHT</div>
+                        <div class="output-value" id="weight">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">RELATIVE DENSITY</div>
+                        <div class="output-value" id="relativeDensity">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">EFFECTIVE MODULUS</div>
+                        <div class="output-value" id="effectiveModulus">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">COMPRESSIVE STRENGTH</div>
+                        <div class="output-value" id="compressiveStrength">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">SHEAR MODULUS</div>
+                        <div class="output-value" id="shearModulus">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">MAX DEFLECTION</div>
+                        <div class="output-value" id="maxDeflection">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">BUCKLING LOAD</div>
+                        <div class="output-value" id="bucklingLoad">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">SAFETY FACTOR</div>
+                        <div class="output-value" id="safetyFactor">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">UNIT CELLS</div>
+                        <div class="output-value" id="unitCells">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">POROSITY</div>
+                        <div class="output-value" id="porosity">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">SPECIFIC STIFFNESS</div>
+                        <div class="output-value" id="specificStiffness">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">NATURAL FREQUENCY</div>
+                        <div class="output-value" id="naturalFreq">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">THERMAL CONDUCTIVITY</div>
+                        <div class="output-value" id="thermalConductivity">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">ASPECT RATIO</div>
+                        <div class="output-value" id="aspectRatio">-</div>
+                    </div>
+                    
+                    <div class="output-card">
+                        <div class="output-label">COST ESTIMATE</div>
+                        <div class="output-value" id="costEstimate">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Three.js globals
+        let scene, camera, renderer, mesh, wireframe, latticeGroup;
+        let isRotating = false;
+        let showWireframe = false;
+        let showLattice = false;
+        let controls;
+        let actualDimensions = {width: 1, height: 1, length: 1};
+        
+        // Unit conversion factors to mm
+        const unitConversion = {
+            mm: 1,
+            cm: 10,
+            m: 1000,
+            km: 1000000
+        };
+        
+        // Material database
+        const materials = {
+            aluminum: {
+                density: 2700,
+                modulus: 69,
+                strength: 310,
+                shear: 26,
+                thermal: 167,
+                cost: 3,
+                poisson: 0.33
+            },
+            steel: {
+                density: 7900,
+                modulus: 193,
+                strength: 520,
+                shear: 77,
+                thermal: 16,
+                cost: 1.5,
+                poisson: 0.29
+            },
+            titanium: {
+                density: 4430,
+                modulus: 114,
+                strength: 950,
+                shear: 44,
+                thermal: 7,
+                cost: 35,
+                poisson: 0.34
+            },
+            carbon: {
+                density: 1600,
+                modulus: 150,
+                strength: 600,
+                shear: 5,
+                thermal: 5,
+                cost: 50,
+                poisson: 0.27
+            },
+            polymer: {
+                density: 1320,
+                modulus: 3.5,
+                strength: 100,
+                shear: 1.3,
+                thermal: 0.25,
+                cost: 100,
+                poisson: 0.4
+            },
+            custom: {
+                density: 2700,
+                modulus: 70,
+                strength: 300,
+                shear: 26,
+                thermal: 100,
+                cost: 10,
+                poisson: 0.33
+            }
+        };
+        
+        function initVisualization() {
+            const container = document.getElementById('canvas-container');
+            
+            // Clear existing
+            container.innerHTML = container.innerHTML.replace(/<canvas.*?<\/canvas>/g, '');
+            
+            // Setup scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
+            
+            // Setup camera
+            const aspect = container.clientWidth / container.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.set(5, 3, 5);
+            camera.lookAt(0, 0, 0);
+            
+            // Setup renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            scene.add(directionalLight);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0x00d4ff, 0.3);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+            
+            // Add grid helper
+            const gridHelper = new THREE.GridHelper(20, 20, 0x00d4ff, 0x003366);
+            gridHelper.position.y = -2;
+            scene.add(gridHelper);
+            
+            // Mouse controls
+            renderer.domElement.addEventListener('mousedown', onMouseDown);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('mouseup', onMouseUp);
+            renderer.domElement.addEventListener('wheel', onMouseWheel);
+        }
+        
+        let mouseDown = false;
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        function onMouseDown(event) {
+            mouseDown = true;
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        }
+        
+        function onMouseMove(event) {
+            if (!mouseDown) return;
+            
+            const deltaX = event.clientX - mouseX;
+            const deltaY = event.clientY - mouseY;
+            
+            if (mesh) {
+                mesh.rotation.y += deltaX * 0.01;
+                mesh.rotation.x += deltaY * 0.01;
+                if (wireframe) {
+                    wireframe.rotation.y = mesh.rotation.y;
+                    wireframe.rotation.x = mesh.rotation.x;
+                }
+                if (latticeGroup) {
+                    latticeGroup.rotation.y = mesh.rotation.y;
+                    latticeGroup.rotation.x = mesh.rotation.x;
+                }
+            }
+            
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        }
+        
+        function onMouseUp() {
+            mouseDown = false;
+        }
+        
+        function onMouseWheel(event) {
+            camera.position.multiplyScalar(1 + event.deltaY * 0.001);
+        }
+        
+        function createMetatroniumMesh(width, height, length, stressLevel) {
+            // Clear existing meshes
+            if (mesh) scene.remove(mesh);
+            if (wireframe) scene.remove(wireframe);
+            if (latticeGroup) scene.remove(latticeGroup);
+            
+            // Calculate proportional dimensions for visualization
+            const maxDim = Math.max(width, height, length);
+            const scale = 5 / maxDim; // Normalize to fit in view
+            
+            const vizWidth = width * scale;
+            const vizHeight = height * scale;
+            const vizLength = length * scale;
+            
+            // Create geometry with proper proportions
+            const segments = Math.max(
+                Math.ceil(width / Math.min(width, height, length) * 5),
+                Math.ceil(height / Math.min(width, height, length) * 5),
+                Math.ceil(length / Math.min(width, height, length) * 5)
+            );
+            
+            const geometry = new THREE.BoxGeometry(
+                vizWidth, 
+                vizHeight, 
+                vizLength, 
+                Math.min(segments, 20),
+                Math.min(segments, 20),
+                Math.min(segments, 20)
+            );
+            
+            // Create stress-based color array
+            const colors = [];
+            const vertices = geometry.attributes.position.array;
+            
+            for (let i = 0; i < vertices.length; i += 3) {
+                const x = vertices[i];
+                const y = vertices[i + 1];
+                const z = vertices[i + 2];
+                
+                // Calculate stress based on position and load type
+                const loadType = document.getElementById('loadType').value;
+                let stress = 0;
+                
+                switch(loadType) {
+                    case 'compression':
+                        stress = Math.abs(y) / (vizHeight/2) * stressLevel;
+                        break;
+                    case 'bending':
+                        // Maximum stress at top/bottom and ends
+                        const bendingStress = Math.abs(y) / (vizHeight/2);
+                        const momentStress = Math.abs(z) / (vizLength/2);
+                        stress = (bendingStress * 0.7 + momentStress * 0.3) * stressLevel;
+                        break;
+                    case 'shear':
+                        stress = (Math.abs(x) + Math.abs(z)) / (vizWidth/2 + vizLength/2) * stressLevel;
+                        break;
+                    case 'tension':
+                        stress = Math.abs(z) / (vizLength/2) * stressLevel;
+                        break;
+                    case 'torsion':
+                        const radius = Math.sqrt(x*x + y*y);
+                        stress = radius / (Math.max(vizWidth, vizHeight)/2) * stressLevel;
+                        break;
+                }
+                
+                // Add some variation for realism
+                stress += (Math.sin(x * 10) * Math.cos(y * 10) * Math.sin(z * 10)) * 0.05;
+                stress = Math.min(1, Math.max(0, stress));
+                
+                // Convert stress to color
+                let r, g, b;
+                if (stress < 0.2) {
+                    r = 0; g = 1; b = 0;
+                } else if (stress < 0.4) {
+                    const t = (stress - 0.2) * 5;
+                    r = t; g = 1; b = 0;
+                } else if (stress < 0.6) {
+                    const t = (stress - 0.4) * 5;
+                    r = 1; g = 1 - t * 0.5; b = 0;
+                } else if (stress < 0.8) {
+                    const t = (stress - 0.6) * 5;
+                    r = 1; g = 0.5 - t * 0.5; b = 0;
+                } else {
+                    r = 1; g = 0; b = 0;
+                }
+                
+                colors.push(r, g, b);
+            }
+            
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            // Create material
+            const material = new THREE.MeshPhongMaterial({
+                vertexColors: true,
+                shininess: 100,
+                specular: 0x222222,
+                transparent: true,
+                opacity: 0.85,
+                side: THREE.DoubleSide
+            });
+            
+            // Create mesh
+            mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+            
+            // Create wireframe
+            const wireframeGeometry = new THREE.WireframeGeometry(geometry);
+            const wireframeMaterial = new THREE.LineBasicMaterial({ 
+                color: 0x00d4ff, 
+                transparent: true, 
+                opacity: 0.3 
+            });
+            wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+            wireframe.visible = showWireframe;
+            scene.add(wireframe);
+            
+            // Add lattice structure
+            latticeGroup = new THREE.Group();
+            addLatticeStructure(vizWidth, vizHeight, vizLength);
+            latticeGroup.visible = showLattice;
+            scene.add(latticeGroup);
+            
+            // Update scale info
+            const scaleRatio = maxDim / 5;
+            document.getElementById('scaleInfo').innerHTML = 
+                `Scale: 1:${scaleRatio > 1 ? Math.round(scaleRatio) : (1/scaleRatio).toFixed(2)}<br>` +
+                `Aspect: ${(width/height).toFixed(1)}:1:${(length/height).toFixed(1)}`;
+            
+            // Adjust camera position based on dimensions
+            const cameraDistance = Math.max(vizWidth, vizHeight, vizLength) * 2;
+            camera.position.set(
+                cameraDistance * 0.7,
+                cameraDistance * 0.5,
+                cameraDistance * 0.7
+            );
+            camera.lookAt(0, 0, 0);
+        }
+        
+        function addLatticeStructure(width, height, length) {
+            const material = new THREE.LineBasicMaterial({ 
+                color: 0x00ffff, 
+                transparent: true, 
+                opacity: 0.2 
+            });
+            
+            // Add internal lattice based on actual proportions
+            const divisions = {
+                x: Math.max(2, Math.min(10, Math.round(width * 2))),
+                y: Math.max(2, Math.min(10, Math.round(height * 2))),
+                z: Math.max(2, Math.min(10, Math.round(length * 2)))
+            };
+            
+            // Create tetrahedral lattice pattern
+            for (let i = 0; i <= divisions.x; i++) {
+                for (let j = 0; j <= divisions.y; j++) {
+                    for (let k = 0; k <= divisions.z; k++) {
+                        const x = (i / divisions.x - 0.5) * width;
+                        const y = (j / divisions.y - 0.5) * height;
+                        const z = (k / divisions.z - 0.5) * length;
+                        
+                        // Add diagonal struts for tetrahedral pattern
+                        if (i < divisions.x && j < divisions.y && k < divisions.z) {
+                            // Main diagonal
+                            const points = [
+                                new THREE.Vector3(x, y, z),
+                                new THREE.Vector3(
+                                    x + width/divisions.x,
+                                    y + height/divisions.y,
+                                    z + length/divisions.z
+                                )
+                            ];
+                            
+                            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                            const line = new THREE.Line(geometry, material);
+                            latticeGroup.add(line);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function setView(view) {
+            if (!mesh) return;
+            
+            const bbox = new THREE.Box3().setFromObject(mesh);
+            const center = bbox.getCenter(new THREE.Vector3());
+            const size = bbox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const distance = maxDim * 2.5;
+            
+            switch(view) {
+                case 'iso':
+                    camera.position.set(distance * 0.7, distance * 0.5, distance * 0.7);
+                    break;
+                case 'top':
+                    camera.position.set(0, distance, 0);
+                    break;
+                case 'front':
+                    camera.position.set(0, 0, distance);
+                    break;
+                case 'side':
+                    camera.position.set(distance, 0, 0);
+                    break;
+            }
+            
+            camera.lookAt(center);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (isRotating && mesh) {
+                mesh.rotation.y += 0.005;
+                if (wireframe) wireframe.rotation.y += 0.005;
+                if (latticeGroup) latticeGroup.rotation.y += 0.005;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function rotateModel() {
+            isRotating = !isRotating;
+            document.getElementById('rotateBtn').classList.toggle('active', isRotating);
+        }
+        
+        function resetView() {
+            if (mesh) {
+                mesh.rotation.set(0, 0, 0);
+                if (wireframe) wireframe.rotation.set(0, 0, 0);
+                if (latticeGroup) latticeGroup.rotation.set(0, 0, 0);
+            }
+            setView('iso');
+            isRotating = false;
+            document.getElementById('rotateBtn').classList.remove('active');
+        }
+        
+        function toggleWireframe() {
+            showWireframe = !showWireframe;
+            if (wireframe) wireframe.visible = showWireframe;
+            document.getElementById('wireframeBtn').classList.toggle('active', showWireframe);
+        }
+        
+        function toggleLattice() {
+            showLattice = !showLattice;
+            if (latticeGroup) latticeGroup.visible = showLattice;
+        }
+        
+        function captureImage() {
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `metatronium_${Date.now()}.png`;
+            link.click();
+        }
+        
+        function formatUnit(value, unit) {
+            if (Math.abs(value) < 0.01) {
+                return value.toExponential(2);
+            } else if (Math.abs(value) < 1) {
+                return value.toFixed(3);
+            } else if (Math.abs(value) < 100) {
+                return value.toFixed(2);
+            } else if (Math.abs(value) < 10000) {
+                return value.toFixed(1);
+            } else {
+                return value.toExponential(2);
+            }
+        }
+        
+        function calculate() {
+            // Get input values and convert to mm
+            const materialType = document.getElementById('material').value;
+            const thickness = parseFloat(document.getElementById('thickness').value) * 
+                            unitConversion[document.getElementById('thicknessUnit').value];
+            const nodeSize = parseFloat(document.getElementById('nodeSize').value) * 
+                           unitConversion[document.getElementById('nodeSizeUnit').value];
+            const width = parseFloat(document.getElementById('width').value) * 
+                         unitConversion[document.getElementById('widthUnit').value];
+            const length = parseFloat(document.getElementById('length').value) * 
+                          unitConversion[document.getElementById('lengthUnit').value];
+            const height = parseFloat(document.getElementById('height').value) * 
+                          unitConversion[document.getElementById('heightUnit').value];
+            const loadType = document.getElementById('loadType').value;
+            
+            // Store actual dimensions in meters
+            actualDimensions = {
+                width: width / 1000,
+                height: height / 1000,
+                length: length / 1000
+            };
+            
+            // Update dimension display
+            const formatDim = (val) => {
+                if (val >= 1000) return (val/1000).toFixed(1) + 'km';
+                if (val >= 1) return val.toFixed(1) + 'm';
+                if (val >= 0.01) return (val*100).toFixed(1) + 'cm';
+                return (val*1000).toFixed(1) + 'mm';
+            };
+            
+            document.getElementById('dimensionDisplay').innerHTML = 
+                `Dimensions: ${formatDim(actualDimensions.width)} × ${formatDim(actualDimensions.height)} × ${formatDim(actualDimensions.length)}`;
+            
+            // Get material properties
+            const mat = materials[materialType];
+            
+            // Calculate unit cells
+            const cellsX = Math.floor(width / nodeSize);
+            const cellsY = Math.floor(length / nodeSize);
+            const cellsZ = Math.floor(height / nodeSize);
+            const totalCells = cellsX * cellsY * cellsZ;
+            
+            // Calculate relative density
+            const relativeDensity = 7 * (thickness / nodeSize) * 1.15;
+            
+            // Calculate surface area
+            const diagonalLength = nodeSize * Math.sqrt(2);
+            const surfacePerCell = (
+                3 * nodeSize * nodeSize + 
+                4 * 0.5 * diagonalLength * diagonalLength
+            ) * (thickness / nodeSize);
+            const totalSurfaceArea = (surfacePerCell * totalCells) / 1000000;
+            
+            // Calculate weight
+            const structureVolume = (width * length * height) / 1e9;
+            const effectiveVolume = structureVolume * relativeDensity;
+            const weight = effectiveVolume * mat.density;
+            
+            // Calculate effective properties
+            const effectiveModulus = mat.modulus * relativeDensity * 0.58;
+            const effectiveShear = mat.shear * relativeDensity * 0.77;
+            const effectiveStrength = mat.strength * Math.pow(relativeDensity, 1.5);
+            
+            // Calculate deflections and loads
+            let maxDeflection = 0;
+            let appliedLoad = weight * 9.81;
+            
+            switch(loadType) {
+                case 'bending':
+                    maxDeflection = (appliedLoad * Math.pow(length/1000, 3)) / 
+                                  (48 * effectiveModulus * 1e9 * 
+                                   (thickness/1000) * Math.pow(height/1000, 3) / 12);
+                    break;
+                case 'compression':
+                    maxDeflection = (appliedLoad * height/1000) / 
+                                  (effectiveModulus * 1e9 * (width/1000) * (length/1000));
+                    break;
+                case 'tension':
+                    maxDeflection = (appliedLoad * length/1000) / 
+                                  (effectiveModulus * 1e9 * (width/1000) * (height/1000));
+                    break;
+                case 'shear':
+                    maxDeflection = (appliedLoad * height/1000) / 
+                                  (effectiveShear * 1e9 * (width/1000) * (length/1000));
+                    break;
+                case 'torsion':
+                    const J = Math.PI * Math.pow(Math.min(width, height)/1000, 4) / 32;
+                    const torque = appliedLoad * length/1000;
+                    maxDeflection = (torque * length/1000) / (effectiveShear * 1e9 * J);
+                    break;
+            }
+            
+            // Calculate buckling load
+            const momentOfInertia = (width/1000) * Math.pow(height/1000, 3) / 12;
+            const bucklingLoad = (Math.PI * Math.PI * effectiveModulus * 1e9 * momentOfInertia) / 
+                               Math.pow(length/1000, 2) / 1000;
+            
+            // Calculate safety factor
+            const safetyFactor = bucklingLoad * 1000 / appliedLoad;
+            
+            // Calculate stress level
+            const stressLevel = Math.min(1, appliedLoad / (bucklingLoad * 1000));
+            document.getElementById('stressMarker').style.left = (stressLevel * 100) + '%';
+            document.getElementById('stressPercent').textContent = Math.round(stressLevel * 100) + '%';
+            
+            // Calculate other properties
+            const porosity = (1 - relativeDensity) * 100;
+            const specificStiffness = (effectiveModulus * 1e9) / (mat.density * relativeDensity);
+            const naturalFreq = 0.5 * Math.sqrt((effectiveModulus * 1e9) / 
+                              (mat.density * relativeDensity)) / (length/1000);
+            const effectiveThermal = mat.thermal * relativeDensity;
+            const materialCost = weight * mat.cost;
+            const aspectRatio = `${(width/height).toFixed(1)}:1:${(length/height).toFixed(1)}`;
+            
+            // Update outputs
+            document.getElementById('surfaceArea').innerHTML = 
+                formatUnit(totalSurfaceArea, 'm²') + '<span class="output-unit">m²</span>';
+            document.getElementById('weight').innerHTML = 
+                formatUnit(weight, 'kg') + '<span class="output-unit">kg</span>';
+            document.getElementById('relativeDensity').innerHTML = 
+                formatUnit(relativeDensity * 100, '%') + '<span class="output-unit">%</span>';
+            document.getElementById('effectiveModulus').innerHTML = 
+                formatUnit(effectiveModulus, 'GPa') + '<span class="output-unit">GPa</span>';
+            document.getElementById('compressiveStrength').innerHTML = 
+                formatUnit(effectiveStrength, 'MPa') + '<span class="output-unit">MPa</span>';
+            document.getElementById('shearModulus').innerHTML = 
+                formatUnit(effectiveShear, 'GPa') + '<span class="output-unit">GPa</span>';
+            document.getElementById('maxDeflection').innerHTML = 
+                formatUnit(maxDeflection * 1000, 'mm') + '<span class="output-unit">mm</span>';
+            document.getElementById('bucklingLoad').innerHTML = 
+                formatUnit(bucklingLoad, 'kN') + '<span class="output-unit">kN</span>';
+            document.getElementById('safetyFactor').innerHTML = 
+                formatUnit(safetyFactor, '') + '<span class="output-unit">×</span>';
+            document.getElementById('unitCells').innerHTML = 
+                totalCells.toLocaleString() + '<span class="output-unit">cells</span>';
+            document.getElementById('porosity').innerHTML = 
+                formatUnit(porosity, '%') + '<span class="output-unit">%</span>';
+            document.getElementById('specificStiffness').innerHTML = 
+                formatUnit(specificStiffness/1e6, 'MNm/kg') + '<span class="output-unit">MNm/kg</span>';
+            document.getElementById('naturalFreq').innerHTML = 
+                formatUnit(naturalFreq, 'Hz') + '<span class="output-unit">Hz</span>';
+            document.getElementById('thermalConductivity').innerHTML = 
+                formatUnit(effectiveThermal, 'W/mK') + '<span class="output-unit">W/mK</span>';
+            document.getElementById('aspectRatio').innerHTML = aspectRatio;
+            document.getElementById('costEstimate').innerHTML = 
+                '$' + formatUnit(materialCost, 'USD') + '<span class="output-unit">USD</span>';
+            
+            // Create 3D visualization with proper proportions
+            createMetatroniumMesh(
+                actualDimensions.width,
+                actualDimensions.height,
+                actualDimensions.length,
+                stressLevel
+            );
+        }
+        
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                inputs: {
+                    material: document.getElementById('material').value,
+                    thickness: document.getElementById('thickness').value + document.getElementById('thicknessUnit').value,
+                    nodeSize: document.getElementById('nodeSize').value + document.getElementById('nodeSizeUnit').value,
+                    width: document.getElementById('width').value + document.getElementById('widthUnit').value,
+                    length: document.getElementById('length').value + document.getElementById('lengthUnit').value,
+                    height: document.getElementById('height').value + document.getElementById('heightUnit').value,
+                    loadType: document.getElementById('loadType').value
+                },
+                actualDimensions: actualDimensions,
+                outputs: {
+                    surfaceArea: document.getElementById('surfaceArea').textContent,
+                    weight: document.getElementById('weight').textContent,
+                    relativeDensity: document.getElementById('relativeDensity').textContent,
+                    effectiveModulus: document.getElementById('effectiveModulus').textContent,
+                    compressiveStrength: document.getElementById('compressiveStrength').textContent,
+                    shearModulus: document.getElementById('shearModulus').textContent,
+                    maxDeflection: document.getElementById('maxDeflection').textContent,
+                    bucklingLoad: document.getElementById('bucklingLoad').textContent,
+                    safetyFactor: document.getElementById('safetyFactor').textContent,
+                    unitCells: document.getElementById('unitCells').textContent,
+                    porosity: document.getElementById('porosity').textContent,
+                    specificStiffness: document.getElementById('specificStiffness').textContent,
+                    naturalFrequency: document.getElementById('naturalFreq').textContent,
+                    thermalConductivity: document.getElementById('thermalConductivity').textContent,
+                    aspectRatio: document.getElementById('aspectRatio').textContent,
+                    costEstimate: document.getElementById('costEstimate').textContent
+                }
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `metatronium_analysis_${Date.now()}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initVisualization();
+            animate();
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('canvas-container');
+            if (camera && renderer) {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+        });
+    </script>
+</body>
+</html>
